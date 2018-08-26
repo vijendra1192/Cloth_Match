@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <elements/>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="14135" systemVersion="17G65" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Favourite" representedClassName="Favourite" syncable="YES" codeGenerationType="class">
+        <attribute name="indexOfShirtImage" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+        <attribute name="indexOfTrouserImage" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
+    </entity>
+    <entity name="ShirtImage" representedClassName="ShirtImage" syncable="YES" codeGenerationType="class">
+        <attribute name="shirtImagePath" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="TrouserImage" representedClassName="TrouserImage" syncable="YES" codeGenerationType="class">
+        <attribute name="trouserImagePath" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="ShirtImage" positionX="-63" positionY="-18" width="128" height="60"/>
+        <element name="TrouserImage" positionX="-54" positionY="-9" width="128" height="60"/>
+        <element name="Favourite" positionX="-36" positionY="9" width="128" height="75"/>
+    </elements>
 </model>
