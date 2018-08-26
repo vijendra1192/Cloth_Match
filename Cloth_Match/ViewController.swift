@@ -9,9 +9,7 @@
 import UIKit
 import CoreData
 import GameplayKit
-import Photos
-import PhotosUI
-import AssetsLibrary
+import QuickLook
 
 
 var supportPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
@@ -52,12 +50,15 @@ class ViewController: UIViewController,UINavigationControllerDelegate {
     var shirtArrayData : [Shirt] = []
     var trouserArrayData : [Shirt] = []
     var shirtStruct : Shirt!
-    
+    var imgURLpath_ : URL?
     
     var isShirtType : Bool = true
     var sourceType : ImageSourceType?
     let imagePicker = UIImagePickerController()
+    let previewController = QLPreviewController()
     var result : [NSManagedObject]?
+    
+    
     
     // Create Context
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
@@ -106,6 +107,7 @@ class ViewController: UIViewController,UINavigationControllerDelegate {
     //MARK: Set Delegate
     func setDelegate() {
         
+        previewController.dataSource = self
         shirtCollectionView.delegate = self
         shirtCollectionView.dataSource = self
         trouserCollectionView.delegate = self
@@ -316,9 +318,13 @@ class ViewController: UIViewController,UINavigationControllerDelegate {
         
         if FileManager.default.fileExists(atPath: (path_?.path)!)
         {
+            imgURLpath_ = path_
             print("yes exist")
             do
             {
+                
+                
+                
                 let data = try Data(contentsOf: path_!)
                 let image_ = UIImage(data: data)
                 return image_
@@ -333,6 +339,21 @@ class ViewController: UIViewController,UINavigationControllerDelegate {
             return nil
         }
     }
+    
+    
+    func getImgUrlPath(imgName:String) -> URL? {
+        let path_ = supportPath?.appendingPathComponent("\(imgName)")
+        
+        if FileManager.default.fileExists(atPath: (path_?.path)!)
+        {
+            return path_
+        }
+        else
+        {
+            return nil
+        }
+    }
+    
 }
 
 extension ViewController : UIImagePickerControllerDelegate
@@ -344,75 +365,38 @@ extension ViewController : UIImagePickerControllerDelegate
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         
-        print("in image cotnrller \(info)")
         let imageUniqueName : Int64 = Int64(NSDate().timeIntervalSince1970 * 1000);
-        
-//        if sourceType == ImageSourceType.imageGallery
-//        {
-            do
+        do
+        {
+            if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage
             {
-//                let imageName =  info[UIImagePickerControllerImageURL] as! URL
-                if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage
+                if isShirtType
                 {
-                    if isShirtType
-                    {
-                        shirtStruct = Shirt(fileName: "Images/\(imageUniqueName).jpg", image: pickedImage)
-                        shirtArrayData.append(shirtStruct)
-                        
-                        self.imageSaveInDB(entityName: "ShirtImage", valueImagePath: "Images/\(imageUniqueName).jpg", keyName: "shirtImagePath")
-                        
-                        self.witeImageToPath(imageName: "\(imageUniqueName).jpg", pickedImage: pickedImage)
-                        
-                        
-                        shirtPageControl.numberOfPages = shirtArrayData.count
-                        shirtCollectionView.reloadData()
-                    }
-                    else // trouserArrayData
-                    {
-                        shirtStruct = Shirt(fileName: "Images/\(imageUniqueName).jpg", image: pickedImage)
-                        trouserArrayData.append(shirtStruct)
-                        
-                        self.imageSaveInDB(entityName: "TrouserImage", valueImagePath: "Images/\(imageUniqueName).jpg", keyName: "trouserImagePath")
-                        
-                        self.witeImageToPath(imageName: "\(imageUniqueName).jpg", pickedImage: pickedImage)
-                        
-                        trouserPageControl.numberOfPages = trouserArrayData.count
-                        trouserCollectionView.reloadData()
-                    }
+                    shirtStruct = Shirt(fileName: "Images/\(imageUniqueName).jpg", image: pickedImage)
+                    shirtArrayData.append(shirtStruct)
+                    
+                    self.imageSaveInDB(entityName: "ShirtImage", valueImagePath: "Images/\(imageUniqueName).jpg", keyName: "shirtImagePath")
+                    
+                    self.witeImageToPath(imageName: "\(imageUniqueName).jpg", pickedImage: pickedImage)
+                    
+                    
+                    shirtPageControl.numberOfPages = shirtArrayData.count
+                    shirtCollectionView.reloadData()
+                }
+                else // trouserArrayData
+                {
+                    shirtStruct = Shirt(fileName: "Images/\(imageUniqueName).jpg", image: pickedImage)
+                    trouserArrayData.append(shirtStruct)
+                    
+                    self.imageSaveInDB(entityName: "TrouserImage", valueImagePath: "Images/\(imageUniqueName).jpg", keyName: "trouserImagePath")
+                    
+                    self.witeImageToPath(imageName: "\(imageUniqueName).jpg", pickedImage: pickedImage)
+                    
+                    trouserPageControl.numberOfPages = trouserArrayData.count
+                    trouserCollectionView.reloadData()
                 }
             }
-//        }
-//        else if sourceType == ImageSourceType.imageCamera
-//        {
-//            if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage
-//            {
-//                if isShirtType
-//                {
-//                    shirtStruct = Shirt(fileName: "Images/\(imageUniqueName).jpg", image: pickedImage)
-//                    shirtArrayData.append(shirtStruct)
-//                    
-//                    self.imageSaveInDB(entityName: "ShirtImage", valueImagePath: "Images/\(imageUniqueName).jpg", keyName: "shirtImagePath")
-//                    
-//                    self.witeImageToPath(imageName: "\(imageUniqueName).jpg", pickedImage: pickedImage)
-//                    
-//                    
-//                    shirtPageControl.numberOfPages = shirtArrayData.count
-//                    shirtCollectionView.reloadData()
-//                }
-//                else // trouserArrayData
-//                {
-//                    shirtStruct = Shirt(fileName: "Images/\(imageUniqueName).jpg", image: pickedImage)
-//                    trouserArrayData.append(shirtStruct)
-//                    
-//                    self.imageSaveInDB(entityName: "TrouserImage", valueImagePath: "Images/\(imageUniqueName).jpg", keyName: "trouserImagePath")
-//                    
-//                    self.witeImageToPath(imageName: "\(imageUniqueName).jpg", pickedImage: pickedImage)
-//                    
-//                    trouserPageControl.numberOfPages = trouserArrayData.count
-//                    trouserCollectionView.reloadData()
-//                }
-//            }
-//        }
+        }
         self.dismiss(animated: true, completion: nil)
     }
 }
@@ -429,8 +413,20 @@ extension ViewController : UICollectionViewDelegate
         {
             trouserPageControl.currentPage = indexPath.section
         }
-        
     }
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+        if collectionView == shirtCollectionView
+        {
+            isShirtType = true
+        }
+        else if collectionView == trouserCollectionView
+        {
+            isShirtType = false
+        }
+        present(previewController, animated: true)
+    }
+    
 }
 extension ViewController : UICollectionViewDataSource
 {
@@ -461,11 +457,8 @@ extension ViewController : UICollectionViewDataSource
         {
             isShirtType = true
             let cell_ = collectionView.dequeueReusableCell(withReuseIdentifier: "ShirtCollectionViewCell", for: indexPath) as? ShirtCollectionViewCell
-            
-            let imgData =
-                UIImageJPEGRepresentation(self.shirtArrayData[indexPath.row].fileImage , 0.5)
-            cell_?.shirtImageView.image = UIImage(data: imgData!)
-            
+           
+            cell_?.shirtImageView.image = self.shirtArrayData[indexPath.row].fileImage//
             return cell_!
         }
         else if collectionView == trouserCollectionView
@@ -473,8 +466,7 @@ extension ViewController : UICollectionViewDataSource
             isShirtType = false
             let cell_ = collectionView.dequeueReusableCell(withReuseIdentifier: "TrouserCollectionViewCell", for: indexPath) as? TrouserCollectionViewCell
             
-            let imgData = UIImageJPEGRepresentation(self.trouserArrayData[indexPath.row].fileImage , 0.5)
-            cell_?.trouserImageView.image = UIImage(data: imgData!)
+            cell_?.trouserImageView.image = self.trouserArrayData[indexPath.row].fileImage//UIImage(data: imgData!)
             
             return cell_!
         }
@@ -542,10 +534,29 @@ extension ViewController : UICollectionViewDelegateFlowLayout
         }
         else
         {
-            
         }
-        
-        
-        
     }
+}
+
+extension ViewController : QLPreviewControllerDataSource
+{
+    func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
+        return 1
+    }
+
+    func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
+
+        if isShirtType
+        {
+            let url = self.getImgUrlPath(imgName: shirtArrayData[index].uniqueFileName)
+            return url! as QLPreviewItem
+        }
+        else
+        {
+            let url = self.getImgUrlPath(imgName: trouserArrayData[index].uniqueFileName)
+            return url! as QLPreviewItem
+        }
+    }
+
+
 }
