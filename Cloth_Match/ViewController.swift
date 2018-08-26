@@ -226,6 +226,24 @@ class ViewController: UIViewController,UINavigationControllerDelegate {
         }
     }
     
+    
+    func witeImageToPath(imageName:String,pickedImage:UIImage) {
+        DispatchQueue.global().async
+            {
+                var trouserImagePath = self.createDirectoryPath()
+                trouserImagePath = trouserImagePath.appendingPathComponent(imageName)
+                let imgData = UIImageJPEGRepresentation(pickedImage, 0.5)
+                do
+                {
+                    try imgData?.write(to: trouserImagePath)
+                }
+                catch
+                {
+                    print("trouser error is \(error.localizedDescription)")
+                }
+        }
+    }
+    
     func saveFavData(shirtIndex:Int,trouserIndex:Int)
     {
         
@@ -340,20 +358,9 @@ extension ViewController : UIImagePickerControllerDelegate
                         
                         self.imageSaveInDB(entityName: "ShirtImage", valueImagePath: "Images/\(imageName.lastPathComponent)", keyName: "shirtImagePath")
                         
-                        DispatchQueue.global().async
-                            {
-                                var imagePath = self.createDirectoryPath()
-                                imagePath = imagePath.appendingPathComponent(imageName.lastPathComponent)
-                                let imgData = UIImageJPEGRepresentation(pickedImage, 0.5)
-                                do
-                                {
-                                    try imgData?.write(to: imagePath)
-                                }
-                                catch
-                                {
-                                    print("shirt error is \(error.localizedDescription)")
-                                }
-                        }
+                        self.witeImageToPath(imageName: imageName.lastPathComponent, pickedImage: pickedImage)
+                        
+                        
                         shirtPageControl.numberOfPages = shirtArrayData.count
                         shirtCollectionView.reloadData()
                     }
@@ -363,20 +370,8 @@ extension ViewController : UIImagePickerControllerDelegate
                         trouserArrayData.append(shirtStruct)
                         
                         self.imageSaveInDB(entityName: "TrouserImage", valueImagePath: "Images/\(imageName.lastPathComponent)", keyName: "trouserImagePath")
-                        DispatchQueue.global().async
-                            {
-                                var trouserImagePath = self.createDirectoryPath()
-                                trouserImagePath = trouserImagePath.appendingPathComponent(imageName.lastPathComponent)
-                                let imgData = UIImageJPEGRepresentation(pickedImage, 0.5)
-                                do
-                                {
-                                    try imgData?.write(to: trouserImagePath)
-                                }
-                                catch
-                                {
-                                    print("trouser error is \(error.localizedDescription)")
-                                }
-                        }
+                        
+                        self.witeImageToPath(imageName: imageName.lastPathComponent, pickedImage: pickedImage)
                         
                         trouserPageControl.numberOfPages = trouserArrayData.count
                         trouserCollectionView.reloadData()
@@ -388,9 +383,13 @@ extension ViewController : UIImagePickerControllerDelegate
         {
             print("in image cotnrller \(info)")
         }
-        
         self.dismiss(animated: true, completion: nil)
     }
+    
+    
+        
+    
+    
 }
 
 
