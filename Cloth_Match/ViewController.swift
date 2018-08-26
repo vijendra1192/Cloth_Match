@@ -339,16 +339,13 @@ extension ViewController : UIImagePickerControllerDelegate
         print("in image cotnrller \(info[UIImagePickerControllerOriginalImage])")
         
         
-        if UIImagePickerController.isSourceTypeAvailable(.photoLibrary)
+        if sourceType == ImageSourceType.imageGallery
         {
             do
             {
                 let imageName =  info[UIImagePickerControllerImageURL] as! URL
                 print("image name [\(imageName.lastPathComponent)]")
                 
-                
-                //            if UIImagePickerController.isSourceTypeAvailable(.camera)
-                //            {
                 if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage
                 {
                     if isShirtType
@@ -379,7 +376,7 @@ extension ViewController : UIImagePickerControllerDelegate
                 }
             }
         }
-        else if UIImagePickerController.isSourceTypeAvailable(.camera)
+        else if sourceType == ImageSourceType.imageCamera
         {
             print("in image cotnrller \(info)")
         }
