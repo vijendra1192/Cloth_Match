@@ -22,6 +22,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Cloth Match Wants to allow camera usage</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Cloth Match Wants to allow camera usage ad</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Cloth Match Wants to allow Photo library usage</string>
 	<key>UILaunchStoryboardName</key>

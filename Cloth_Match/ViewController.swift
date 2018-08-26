@@ -9,6 +9,10 @@
 import UIKit
 import CoreData
 import GameplayKit
+import Photos
+import PhotosUI
+import AssetsLibrary
+
 
 var supportPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
 
@@ -81,11 +85,14 @@ class ViewController: UIViewController,UINavigationControllerDelegate {
         }
         if let trouserImg = self.fetchImageData(entity: "TrouserImage")
         {
-            for img in trouserImg
+            if trouserImg.count > 0
             {
-                shirtStruct = Shirt(fileName: img.value(forKey: "trouserImagePath") as! String, image: self.doesFileWithNameExist(fileName: img.value(forKey: "trouserImagePath")! as! String)!)
-                
-                trouserArrayData.append(shirtStruct)
+                for img in trouserImg
+                {
+                    shirtStruct = Shirt(fileName: img.value(forKey: "trouserImagePath") as! String, image: self.doesFileWithNameExist(fileName: img.value(forKey: "trouserImagePath")! as! String)!)
+                    
+                    trouserArrayData.append(shirtStruct)
+                }
             }
         }
         self.setPageContrller()
@@ -145,13 +152,14 @@ class ViewController: UIViewController,UINavigationControllerDelegate {
     
     @IBAction func favouriteBtnPressed(_ sender: Any) {
         
+        if shirtArrayData.count <= 0 || trouserArrayData.count <= 0
+        {
+            print("count is zero")
+            return
+        }
         var dict_ = [String:String]()
-        
         dict_["shirtKey"] = shirtArrayData[shirtPageControl.currentPage].uniqueFileName
         dict_["trouserKey"] = trouserArrayData[trouserPageControl.currentPage].uniqueFileName
-        
-        
-        
         
         if favouriteDataArr.count > 0
         {
@@ -253,7 +261,7 @@ class ViewController: UIViewController,UINavigationControllerDelegate {
         let newUser = NSManagedObject(entity: entity!, insertInto: context)
         newUser.setValue(shirtPageControl.currentPage, forKey: "indexOfShirtImage")
         newUser.setValue(trouserPageControl.currentPage, forKey: "indexOfTrouserImage")
-    
+        
         do
         {
             try context.save()
@@ -335,27 +343,25 @@ extension ViewController : UIImagePickerControllerDelegate
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
-       
-        print("in image cotnrller \(info[UIImagePickerControllerOriginalImage])")
         
+        print("in image cotnrller \(info)")
+        let imageUniqueName : Int64 = Int64(NSDate().timeIntervalSince1970 * 1000);
         
-        if sourceType == ImageSourceType.imageGallery
-        {
+//        if sourceType == ImageSourceType.imageGallery
+//        {
             do
             {
-                let imageName =  info[UIImagePickerControllerImageURL] as! URL
-                print("image name [\(imageName.lastPathComponent)]")
-                
+//                let imageName =  info[UIImagePickerControllerImageURL] as! URL
                 if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage
                 {
                     if isShirtType
                     {
-                        shirtStruct = Shirt(fileName: "Images/\(imageName.lastPathComponent)", image: pickedImage)
+                        shirtStruct = Shirt(fileName: "Images/\(imageUniqueName).jpg", image: pickedImage)
                         shirtArrayData.append(shirtStruct)
                         
-                        self.imageSaveInDB(entityName: "ShirtImage", valueImagePath: "Images/\(imageName.lastPathComponent)", keyName: "shirtImagePath")
+                        self.imageSaveInDB(entityName: "ShirtImage", valueImagePath: "Images/\(imageUniqueName).jpg", keyName: "shirtImagePath")
                         
-                        self.witeImageToPath(imageName: imageName.lastPathComponent, pickedImage: pickedImage)
+                        self.witeImageToPath(imageName: "\(imageUniqueName).jpg", pickedImage: pickedImage)
                         
                         
                         shirtPageControl.numberOfPages = shirtArrayData.count
@@ -363,30 +369,52 @@ extension ViewController : UIImagePickerControllerDelegate
                     }
                     else // trouserArrayData
                     {
-                        shirtStruct = Shirt(fileName: "Images/\(imageName.lastPathComponent)", image: pickedImage)
+                        shirtStruct = Shirt(fileName: "Images/\(imageUniqueName).jpg", image: pickedImage)
                         trouserArrayData.append(shirtStruct)
                         
-                        self.imageSaveInDB(entityName: "TrouserImage", valueImagePath: "Images/\(imageName.lastPathComponent)", keyName: "trouserImagePath")
+                        self.imageSaveInDB(entityName: "TrouserImage", valueImagePath: "Images/\(imageUniqueName).jpg", keyName: "trouserImagePath")
                         
-                        self.witeImageToPath(imageName: imageName.lastPathComponent, pickedImage: pickedImage)
+                        self.witeImageToPath(imageName: "\(imageUniqueName).jpg", pickedImage: pickedImage)
                         
                         trouserPageControl.numberOfPages = trouserArrayData.count
                         trouserCollectionView.reloadData()
                     }
                 }
             }
-        }
-        else if sourceType == ImageSourceType.imageCamera
-        {
-            print("in image cotnrller \(info)")
-        }
+//        }
+//        else if sourceType == ImageSourceType.imageCamera
+//        {
+//            if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage
+//            {
+//                if isShirtType
+//                {
+//                    shirtStruct = Shirt(fileName: "Images/\(imageUniqueName).jpg", image: pickedImage)
+//                    shirtArrayData.append(shirtStruct)
+//                    
+//                    self.imageSaveInDB(entityName: "ShirtImage", valueImagePath: "Images/\(imageUniqueName).jpg", keyName: "shirtImagePath")
+//                    
+//                    self.witeImageToPath(imageName: "\(imageUniqueName).jpg", pickedImage: pickedImage)
+//                    
+//                    
+//                    shirtPageControl.numberOfPages = shirtArrayData.count
+//                    shirtCollectionView.reloadData()
+//                }
+//                else // trouserArrayData
+//                {
+//                    shirtStruct = Shirt(fileName: "Images/\(imageUniqueName).jpg", image: pickedImage)
+//                    trouserArrayData.append(shirtStruct)
+//                    
+//                    self.imageSaveInDB(entityName: "TrouserImage", valueImagePath: "Images/\(imageUniqueName).jpg", keyName: "trouserImagePath")
+//                    
+//                    self.witeImageToPath(imageName: "\(imageUniqueName).jpg", pickedImage: pickedImage)
+//                    
+//                    trouserPageControl.numberOfPages = trouserArrayData.count
+//                    trouserCollectionView.reloadData()
+//                }
+//            }
+//        }
         self.dismiss(animated: true, completion: nil)
     }
-    
-    
-        
-    
-    
 }
 
 
@@ -433,9 +461,10 @@ extension ViewController : UICollectionViewDataSource
         {
             isShirtType = true
             let cell_ = collectionView.dequeueReusableCell(withReuseIdentifier: "ShirtCollectionViewCell", for: indexPath) as? ShirtCollectionViewCell
-
-            let imgData = UIImageJPEGRepresentation(self.shirtArrayData[indexPath.row].fileImage , 0.5)
-                cell_?.shirtImageView.image = UIImage(data: imgData!)
+            
+            let imgData =
+                UIImageJPEGRepresentation(self.shirtArrayData[indexPath.row].fileImage , 0.5)
+            cell_?.shirtImageView.image = UIImage(data: imgData!)
             
             return cell_!
         }
@@ -476,34 +505,47 @@ extension ViewController : UICollectionViewDelegateFlowLayout
     
     
     
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView)
+    {
         
-        if scrollView == shirtCollectionView
+        if shirtArrayData.count > 0 && trouserArrayData.count > 0
         {
-            let pageWidth : CGFloat = self.shirtCollectionView.frame.size.width
-            shirtPageControl.currentPage = Int((self.shirtCollectionView.contentOffset.x/pageWidth).rounded(.up))
+            if scrollView == shirtCollectionView
+            {
+                let pageWidth : CGFloat = self.shirtCollectionView.frame.size.width
+                shirtPageControl.currentPage = Int((self.shirtCollectionView.contentOffset.x/pageWidth).rounded(.up))
+            }
+            else
+            {
+                let pageWidth : CGFloat = self.trouserCollectionView.frame.size.width
+                trouserPageControl.currentPage = Int((self.trouserCollectionView.contentOffset.x/pageWidth).rounded(.up))
+            }
+            print("current page shirt \(shirtPageControl.currentPage) and current page trouser \(trouserPageControl.currentPage)")
+            
+            
+            var tempDic = [String:String]()
+            
+            tempDic["shirtKey"] = shirtArrayData[shirtPageControl.currentPage].uniqueFileName
+            tempDic["trouserKey"] = trouserArrayData[trouserPageControl.currentPage].uniqueFileName
+            
+            let isContains = favouriteDataArr.contains(tempDic)
+            print("bool value is-->> \(isContains)")
+            
+            if isContains
+            {
+                favouriteBtnOutlet.setImage(UIImage(named: "fillheart.png"), for: .normal)
+            }
+            else
+            {
+                favouriteBtnOutlet.setImage(UIImage(named: "withoutfillheart.png"), for: .normal)
+            }
         }
         else
         {
-            let pageWidth : CGFloat = self.trouserCollectionView.frame.size.width
-            trouserPageControl.currentPage = Int((self.trouserCollectionView.contentOffset.x/pageWidth).rounded(.up))
+            
         }
         
-        var tempDic = [String:String]()
         
-        tempDic["shirtKey"] = shirtArrayData[shirtPageControl.currentPage].uniqueFileName
-        tempDic["trouserKey"] = trouserArrayData[trouserPageControl.currentPage].uniqueFileName
         
-        let isContains = favouriteDataArr.contains(tempDic)
-        print("bool value is-->> \(isContains)")
-        
-        if isContains
-        {
-            favouriteBtnOutlet.setImage(UIImage(named: "fillheart.png"), for: .normal)
-        }
-        else
-        {
-            favouriteBtnOutlet.setImage(UIImage(named: "withoutfillheart.png"), for: .normal)
-        }
     }
 }
