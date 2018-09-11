@@ -10,7 +10,7 @@ import UIKit
 import CoreData
 import GameplayKit
 import QuickLook
-
+import Toast_Swift
 
 var supportPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
 
@@ -55,7 +55,8 @@ class ViewController: UIViewController,UINavigationControllerDelegate {
     var isShirtType : Bool = true
     var sourceType : ImageSourceType?
     let imagePicker = UIImagePickerController()
-    let previewController = QLPreviewController()
+    let shirtPreviewController = QLPreviewController()
+    let trouserPreviewController = QLPreviewController()
     var result : [NSManagedObject]?
     
     
@@ -69,7 +70,7 @@ class ViewController: UIViewController,UINavigationControllerDelegate {
         self.setDelegate()
         isShirtType = false
         
-        
+        self.navigationController?.isNavigationBarHidden = true
         
         
         if let shirtImg = self.fetchImageData(entity: "ShirtImage")
@@ -107,7 +108,10 @@ class ViewController: UIViewController,UINavigationControllerDelegate {
     //MARK: Set Delegate
     func setDelegate() {
         
-        previewController.dataSource = self
+        shirtPreviewController.delegate = self
+        shirtPreviewController.dataSource = self
+        trouserPreviewController.dataSource = self
+        trouserPreviewController.delegate = self
         shirtCollectionView.delegate = self
         shirtCollectionView.dataSource = self
         trouserCollectionView.delegate = self
@@ -143,13 +147,43 @@ class ViewController: UIViewController,UINavigationControllerDelegate {
     
     @IBAction func shufflePressed(_ sender: Any)
     {
+        if shirtArrayData.count <= 0 || trouserArrayData.count <= 0
+        {
+            self.view.makeToast("There is no shirt or trouser for shuffle")
+            return
+        }
+        
+        
+        
         shirtArrayData = GKRandomSource.sharedRandom().arrayByShufflingObjects(in: shirtArrayData) as! [Shirt]
         trouserArrayData = GKRandomSource.sharedRandom().arrayByShufflingObjects(in: trouserArrayData) as! [Shirt]
         
         shirtPageControl.currentPage = 0
         trouserPageControl.currentPage = 0
         
+        
+        
+        
         self.reloadCollectioView()
+        
+        
+        var tempDic = [String:String]()
+        
+        tempDic["shirtKey"] = shirtArrayData[shirtPageControl.currentPage].uniqueFileName
+        tempDic["trouserKey"] = trouserArrayData[trouserPageControl.currentPage].uniqueFileName
+        
+        let isContains = favouriteDataArr.contains(tempDic)
+        print("bool value is-->> \(isContains)")
+        
+        if isContains
+        {
+            favouriteBtnOutlet.setImage(UIImage(named: "fillheart.png"), for: .normal)
+        }
+        else
+        {
+            favouriteBtnOutlet.setImage(UIImage(named: "withoutfillheart.png"), for: .normal)
+        }
+        
     }
     
     @IBAction func favouriteBtnPressed(_ sender: Any) {
@@ -157,6 +191,15 @@ class ViewController: UIViewController,UINavigationControllerDelegate {
         if shirtArrayData.count <= 0 || trouserArrayData.count <= 0
         {
             print("count is zero")
+            
+            if shirtArrayData.count <= 0
+            {
+                self.view.makeToast("Please select shirt to add in favourite")
+            }
+            else if trouserArrayData.count <= 0
+            {
+                self.view.makeToast("Please select trouser to add in favourite")
+            }
             return
         }
         var dict_ = [String:String]()
@@ -404,27 +447,18 @@ extension ViewController : UIImagePickerControllerDelegate
 
 extension ViewController : UICollectionViewDelegate
 {
-    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        if collectionView == shirtCollectionView
-        {
-            shirtPageControl.currentPage = indexPath.section
-        }
-        else if collectionView == trouserCollectionView
-        {
-            trouserPageControl.currentPage = indexPath.section
-        }
-    }
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath)
+    {
         if collectionView == shirtCollectionView
         {
             isShirtType = true
+            present(shirtPreviewController, animated: true)
         }
         else if collectionView == trouserCollectionView
         {
             isShirtType = false
+            present(trouserPreviewController, animated: true)
         }
-        present(previewController, animated: true)
     }
     
 }
@@ -473,13 +507,13 @@ extension ViewController : UICollectionViewDataSource
         return UICollectionViewCell()
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return 0
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        return 10
-    }
+//    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+//        return 0
+//    }
+//
+//    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+//        return 0
+//    }
     
     
     
@@ -488,20 +522,15 @@ extension ViewController : UICollectionViewDataSource
 extension ViewController : UICollectionViewDelegateFlowLayout
 {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: collectionView.frame.size.width-10, height: collectionView.frame.size.height-20)
+        return CGSize(width: collectionView.frame.size.width, height: collectionView.frame.size.height-10)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        return UIEdgeInsetsMake(0, 5, 0, 5)
+        return UIEdgeInsetsMake(0, 10, 10, 0)
     }
-    
-    
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView)
     {
-        
-        if shirtArrayData.count > 0 && trouserArrayData.count > 0
-        {
             if scrollView == shirtCollectionView
             {
                 let pageWidth : CGFloat = self.shirtCollectionView.frame.size.width
@@ -513,16 +542,20 @@ extension ViewController : UICollectionViewDelegateFlowLayout
                 trouserPageControl.currentPage = Int((self.trouserCollectionView.contentOffset.x/pageWidth).rounded(.up))
             }
             print("current page shirt \(shirtPageControl.currentPage) and current page trouser \(trouserPageControl.currentPage)")
-            
-            
+
+
+
+        if shirtArrayData.count > 0 && trouserArrayData.count > 0
+        {
+
             var tempDic = [String:String]()
-            
+
             tempDic["shirtKey"] = shirtArrayData[shirtPageControl.currentPage].uniqueFileName
             tempDic["trouserKey"] = trouserArrayData[trouserPageControl.currentPage].uniqueFileName
-            
+
             let isContains = favouriteDataArr.contains(tempDic)
             print("bool value is-->> \(isContains)")
-            
+
             if isContains
             {
                 favouriteBtnOutlet.setImage(UIImage(named: "fillheart.png"), for: .normal)
@@ -534,19 +567,28 @@ extension ViewController : UICollectionViewDelegateFlowLayout
         }
         else
         {
+
         }
     }
 }
 
-extension ViewController : QLPreviewControllerDataSource
+extension ViewController : QLPreviewControllerDataSource,QLPreviewControllerDelegate
 {
     func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
-        return 1
+        
+        if controller == shirtPreviewController
+        {
+            return shirtArrayData.count
+        }
+        else
+        {
+            return trouserArrayData.count
+        }
     }
 
     func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
 
-        if isShirtType
+        if controller == shirtPreviewController
         {
             let url = self.getImgUrlPath(imgName: shirtArrayData[index].uniqueFileName)
             return url! as QLPreviewItem
@@ -557,6 +599,4 @@ extension ViewController : QLPreviewControllerDataSource
             return url! as QLPreviewItem
         }
     }
-
-
 }
